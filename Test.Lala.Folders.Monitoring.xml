@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>Test.Lala.Folders.Monitoring</ID>
+      <Version>1.0.0.304</Version>
+    </Identity>
+    <Name>Test Lala Folders Monitoring</Name>
+    <References>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="Test.Lala.ConfigFile.Class" Accessibility="Internal" Abstract="false" Base="Windows!Microsoft.Windows.LocalApplication" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="FullName" Key="false" Type="string" Required="true" />
+          <Property ID="FileName" Key="true" Type="string" Required="true" />
+          <Property ID="LastWriteTime" Key="false" Type="string" Required="true" />
+          <Property ID="Interval" Key="false" Type="int" Required="true" />
+        </ClassType>
+        <ClassType ID="Test.Lala.Folder.Class" Accessibility="Internal" Abstract="false" Base="Windows!Microsoft.Windows.ApplicationComponent" Hosted="true" Singleton="false" Extension="false">
+          <Property ID="FolderPath" Key="true" Type="string" Required="true" />
+        </ClassType>
+      </ClassTypes>
+      <RelationshipTypes>
+        <RelationshipType ID="ConfigHostsFolder" Base="System!System.Hosting" Accessibility="Public">
+          <Source ID="LocalApplication" Type="Test.Lala.ConfigFile.Class" />
+          <Target ID="ApplicationComponent" Type="Test.Lala.Folder.Class" />
+        </RelationshipType>
+      </RelationshipTypes>
+    </EntityTypes>
+    <ModuleTypes>
+      <DataSourceModuleType ID="PS.DS.With.SpreadInitializationOverInterval" Accessibility="Public">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SpreadInitializationOverInterval" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptName" type="NonNullString" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptBody" type="NonNullString" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SnapIns" type="SnapInsType" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Parameters" type="NamedParametersType" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="StrictErrorHandling" type="xsd:boolean" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SpreadInitializationOverInterval" Selector="$Config/SpreadInitializationOverInterval$" ParameterType="int" />
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource TypeID="System!System.Discovery.Scheduler" ID="DS1">
+                <Scheduler>
+                  <SimpleReccuringSchedule>
+                    <Interval>$Config/IntervalSeconds$</Interval>
+                    <SpreadInitializationOverInterval Unit="Seconds">$Config/SpreadInitializationOverInterval$</SpreadInitializationOverInterval>
+                  </SimpleReccuringSchedule>
+                  <ExcludeDates />
+                </Scheduler>
+              </DataSource>
+              <ProbeAction TypeID="Windows!Microsoft.Windows.PowerShellDiscoveryProbe" ID="PSScript">
+                <ScriptName>$Config/ScriptName$</ScriptName>
+                <ScriptBody>$Config/ScriptBody$</ScriptBody>
+                <SnapIns>$Config/SnapIns$</SnapIns>
+                <Parameters>$Config/Parameters$</Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>$Config/StrictErrorHandling$</StrictErrorHandling>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PSScript">
+                <Node ID="DS1" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="PowerShellDataSource" Accessibility="Public">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptName" type="NonNullString" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ScriptBody" type="NonNullString" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SnapIns" type="SnapInsType" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Parameters" type="NamedParametersType" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="StrictErrorHandling" type="xsd:boolean" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="PSScript" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+                <ScriptName>$Config/ScriptName$</ScriptName>
+                <ScriptBody>$Config/ScriptBody$</ScriptBody>
+                <SnapIns>$Config/SnapIns$</SnapIns>
+                <Parameters>$Config/Parameters$</Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>$Config/StrictErrorHandling$</StrictErrorHandling>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PSScript">
+                <Node ID="Scheduler" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="CheckFolderDate.MonitorType" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Healthy" />
+          <MonitorTypeState ID="Critical" />
+        </MonitorTypeStates>
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>Windows!Microsoft.Windows.PowerShellSchema</SchemaType>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="IntervalSeconds" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <!--<xsd:element name="ScriptName" type="NonNullString" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+            <xsd:element name="ScriptBody" type="NonNullString" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />-->
+          <!--<xsd:element name="SnapIns" type="SnapInsType" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />-->
+          <xsd:element name="Parameters" type="NamedParametersType" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <!--<xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />-->
+          <!--<xsd:element name="StrictErrorHandling" type="xsd:boolean" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />-->
+          <!-- <xsd:element name="HealthyExpression" type="ExpressionType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="CriticalExpression" type="ExpressionType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />-->
+          <!--<xsd:element name="Schedule" type="PublicSchedulerType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />-->
+        </Configuration>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="PSScript" TypeID="PowerShellDataSource">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime />
+              <ScriptName>CheckFolderDate10min.ps1</ScriptName>
+              <ScriptBody><![CDATA[Param
+(
+	[int]$Interval,    ##  $Target/Host/Property[Type="Test.Lala.ConfigFile.Class"]/Interval$</Value>
+	[string]$FullName  ## $Target/Host/Property[Type="Test.Lala.ConfigFile.Class"]/FullName$</Value>
+) 
+
+$oAPI = New-Object -comObject MOM.ScriptAPI
+
+$limit = (Get-Date).AddMinutes(-($Interval))
+
+try
+{
+	$reader = [System.IO.File]::OpenText("$FullName")
+
+	while($null -ne ($line = $reader.ReadLine()))  ## $line это каждая строка конфига
+	{
+		$folder,$schedule = $line.split('#')
+
+		###############  проверяем расписание
+
+		$OnSchedule           = $false 
+		$DaysOfWeeks          = $Schedule.Split(";") 
+		$CurrentLocalDateTime = Get-Date  
+
+		#$oAPI.LogScriptEvent("CheckFolderDate.ps1", 19999, 1, "schedule == $schedule")
+  
+		foreach ($DayOfWeek in $DaysOfWeeks) 
+		{ 
+   				$DayOfWeekString = $DayOfWeek.Split(",").GetValue(0) 
+   				$StartTime = ($DayOfWeek.Split(",").GetValue(1)).Split("-").GetValue(0) 
+   				$EndTime = ($DayOfWeek.Split(",").GetValue(1)).Split("-").GetValue(1) 
+    
+    			switch ($DayOfWeekString) 
+   				{ 
+       				"Mon" {$DayOfWeekInt = 1} 
+       				"Tue" {$DayOfWeekInt = 2} 
+       				"Wed" {$DayOfWeekInt = 3} 
+       				"Thu" {$DayOfWeekInt = 4} 
+       				"Fri" {$DayOfWeekInt = 5} 
+       				"Sat" {$DayOfWeekInt = 6} 
+       				"Sun" {$DayOfWeekInt = 0} 
+        
+        			default {$DayOfWeekInt = 101} 
+    			} 
+         
+    			if ($DayOfWeekInt -eq $CurrentLocalDateTime.DayOfWeek) 
+   				{ 
+       				if ($CurrentLocalDateTime -ge [datetime]$StartTime -and $CurrentLocalDateTime -le [datetime]$EndTime) 
+       				{ 
+          			   $OnSchedule = $true 
+       				} 
+   				} 
+		} 
+
+		#################
+
+		if ($OnSchedule)
+		{
+
+			#$type = ((Get-ChildItem -Path $folder -file).Where({$_.LastWriteTime -lt $limit})).gettype()
+
+			$old_files = @(Get-ChildItem -Path $folder -file).Where({$_.LastWriteTime -lt $limit}) | select Name,LastWriteTime | Sort-Object name  ##
+
+			if ($old_files) # 
+			{
+				$state = 'ERROR'
+				
+				$alert = "<table style='border-collapse:collapse;'BORDER='1' CELLPADDING='5' CELLSPACING='0' BORDERCOLOR='GREY'>"  ### 
+
+				$alert = $alert + "<tr style='background-color:lightgrey;'>  
+											<td style='padding-top: 3px; vertical-align: middle;'>File name</td>  
+											<td style='padding-top: 3px; vertical-align: middle;'>Date modified</td>
+									  </tr>"  #># шапка
+		
+
+				ForEach ($old_file in $old_files) 
+				{
+					#$alert = $alert+"File name: $($old_file.Name) date modified: $($old_file.LastWriteTime) "+[Environment]::NewLine
+
+					$alert = $alert + "<tr style='background-color:lightgrey;'>
+											<td style='padding-top: 3px; vertical-align: middle;'>$($old_file.Name)</td>  
+											<td style='padding-top: 3px; vertical-align: middle;'>$($old_file.LastWriteTime)</td>
+									  </tr>"#>
+				}
+
+				$alert=$alert + '</table>'
+			}
+			else
+			{
+				$state = 'OK'
+			}
+
+				$bag = $oAPI.CreatePropertyBag()
+					$bag.addValue('FOLDERPATH',$folder) # cookdown key
+					$bag.AddValue('STATE',$State)
+					$bag.AddValue('INTERVAL',$INTERVAL)
+					$bag.AddValue('ALERT',$alert)
+					$bag.AddValue('SCHEDULE',$schedule)
+
+				$bag
+
+				#$oAPI.LogScriptEvent("CheckFolderDate.ps1", 19999, 1, "bag=$folder.....$el.....$state.....$alert")
+	
+		}
+        else
+        {
+
+	       # $oAPI.LogScriptEvent("CheckFolderDate.ps1", 19999, 1, "out of sch")
+           
+        }
+
+		
+	#########################
+	
+	}
+	
+$reader.Close()
+}
+catch
+{
+		$e = $_.Exception
+		$line = $_.InvocationInfo.ScriptLineNumber
+		$msg = $e.Message 
+
+		$oAPI.LogScriptEvent("CheckFolderDate.ps1", 19999, 1, "$msg at $line  /// folder= $folder /// limit = $limit /// state= $state /// alert = $alert /// gci var type = $type ")
+
+}
+
+]]></ScriptBody>
+              <SnapIns />
+              <Parameters>$Config/Parameters$</Parameters>
+              <TimeoutSeconds>60</TimeoutSeconds>
+              <StrictErrorHandling>false</StrictErrorHandling>
+            </DataSource>
+            <ConditionDetection ID="HealthyFilter" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name="STATE"]</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">OK</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name="FOLDERPATH"]</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">$Target/Property[Type="Test.Lala.Folder.Class"]/FolderPath$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="CriticalFilter" TypeID="System!System.ExpressionFilter" Comment="supression включен!!!">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name="STATE"]</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">ERROR</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="String">Property[@Name="FOLDERPATH"]</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value Type="String">$Target/Property[Type="Test.Lala.Folder.Class"]/FolderPath$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <!--<ConditionDetection ID="Filter" TypeID="System!System.SchedulerFilter">
+							<SchedulerFilter>
+								<ProcessDataMode>OnSchedule</ProcessDataMode>
+								<Schedule>$Config/Schedule$</Schedule>
+								<UseCurrentTime>true</UseCurrentTime>
+							</SchedulerFilter>
+						</ConditionDetection>-->
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Healthy">
+              <Node ID="HealthyFilter">
+                <!--<Node ID="Filter">-->
+                <Node ID="PSScript" />
+                <!--</Node>-->
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="Critical">
+              <Node ID="CriticalFilter">
+                <!--<Node ID="Filter">-->
+                <Node ID="PSScript" />
+                <!--</Node>-->
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="ConfigDiscovery" Target="Windows!Microsoft.Windows.Computer" Enabled="true" ConfirmDelivery="false" Remotable="false" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Test.Lala.ConfigFile.Class" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+          <IntervalSeconds>14400</IntervalSeconds>
+          <SyncTime />
+          <ScriptName>DiscoverConfigFiles.ps1</ScriptName>
+          <ScriptBody><![CDATA[param($sourceID, $managedEntityID, $ComputerName)
+
+[array]$configs = "E:\Monitoring\10min.txt
+E:\Monitoring\15min.txt
+E:\Monitoring\24h10min.txt
+E:\Monitoring\35min.txt
+D:\Monitoring\10min.txt
+D:\Monitoring\15min.txt
+D:\Monitoring\24h10min.txt
+D:\Monitoring\35min.txt
+C:\test\10min.txt".Split([environment]::NewLine)    #  -split [System.Environment]::NewLine will not work in ps module
+
+     
+$oAPI      = New-Object -comObject MOM.ScriptAPI
+$Discovery = $oAPI.CreateDiscoveryData(0, $sourceID, $managedEntityID)
+
+try 
+{
+	ForEach ($config in $configs)
+	{
+		$info     = Get-Item -path $config | select FullName,Name,LastWriteTime 
+		
+		if ($info -ne $null) ## 
+		{
+			Switch -Wildcard ($config) 
+			{
+				'*\24h10min.txt' {[int]$interval = 1450}
+				'*\10min.txt'    {[int]$interval = 10}
+				'*\15min.txt'    {[int]$interval = 15}
+				'*\35min.txt'    {[int]$interval = 35}
+
+				#'C:\test\10min.txt' {[int]$interval = 10}
+				#'C:\test\15min.txt' {[int]$interval = 15}
+				  
+			Default {$oAPI.LogScriptEvent("DiscoverConfigFiles.ps1", 19999, 1, 'pls check $config variable and switch vars')}
+			}
+
+			$Instance = $Discovery.CreateClassInstance("$MPElement[Name='Test.Lala.ConfigFile.Class']$")
+
+			$Instance.AddProperty("$MPElement[Name='Test.Lala.ConfigFile.Class']/FullName$",$info.FullName)
+			$Instance.AddProperty("$MPElement[Name='Test.Lala.ConfigFile.Class']/FileName$",$info.Name)
+			$Instance.AddProperty("$MPElement[Name='Test.Lala.ConfigFile.Class']/LastWriteTime$",$info.LastWriteTime)
+			$Instance.AddProperty("$MPElement[Name='Test.Lala.ConfigFile.Class']/Interval$",$interval)
+			$Instance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $ComputerName)
+
+			$Discovery.AddInstance($Instance)
+		}
+	}
+	$Discovery
+} 
+catch
+{
+	$e    = $_.Exception
+	$line = $_.InvocationInfo.ScriptLineNumber
+	$msg  = $e.Message 
+
+    $oAPI.LogScriptEvent("DiscoverConfigFiles.ps1.ps1", 19999, 1, "$msg at $line;info=$info,ComputerName=$ComputerName,sourceID=$sourceID,managedEntityID=$managedEntityID,$configs,$interval")
+	
+}
+]]></ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>sourceID</Name>
+              <Value>$MPElement$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>managedEntityID</Name>
+              <Value>$Target/Id$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>ComputerName</Name>
+              <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+          <StrictErrorHandling>false</StrictErrorHandling>
+        </DataSource>
+      </Discovery>
+      <Discovery ID="FolderDiscovery" Target="Test.Lala.ConfigFile.Class" Enabled="true" ConfirmDelivery="false" Remotable="false" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryRelationship TypeID="ConfigHostsFolder" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.TimedPowerShell.DiscoveryProvider">
+          <IntervalSeconds>14400</IntervalSeconds>
+          <SyncTime />
+          <!--<SpreadInitializationOverInterval>1200</SpreadInitializationOverInterval>-->
+          <ScriptName>DiscoverFolder.ps1</ScriptName>
+          <ScriptBody><![CDATA[param($sourceID, $managedEntityID, $ComputerName,$FileName,$FullName)  
+
+<#
+$sourceID			= 'B37CDE83-8052-9E73-FEED-D15D0A7C580E'
+$managedEntityID	= '84D1648B-3BC5-6270-FEF5-B01C7244AE99'
+$ComputerName		= 'monms01.domain.com'
+$FullName			= 'C:\test\10min.txt'
+
+        #>
+$oAPI      = New-Object -ComObject MOM.ScriptAPI
+$Discovery = $oAPI.CreateDiscoveryData(0, $sourceID, $managedEntityID)
+
+try 
+{
+	#$folders = Get-Content -Path $FullName # т.к. файлы маленькие можно юзать gc
+
+	$reader = [System.IO.File]::OpenText($FullName)
+
+	while($null -ne ($line = $reader.ReadLine()))  ## $line это каждая строка
+
+	{
+        
+        $folder = $line.split('#')[0]  
+
+		$oAPI.LogScriptEvent("Discover_Lala_folder.ps1.ps1", 666, 1, "folder = $folder")
+   
+		$configFileInstance = $Discovery.CreateClassInstance("$MPElement[Name='Test.Lala.ConfigFile.Class']$")  	
+		$configFileInstance.AddProperty("$MPElement[Name='Test.Lala.ConfigFile.Class']/FileName$", $FileName)
+		$configFileInstance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$", $computerName)
+
+		$Instance = $Discovery.CreateClassInstance("$MPElement[Name='Test.Lala.Folder.Class']$")
+		$Instance.AddProperty("$MPElement[Name='Test.Lala.Folder.Class']/FolderPath$", $folder)
+		$Instance.AddProperty("$MPElement[Name='Test.Lala.ConfigFile.Class']/FileName$", $FileName) 
+		$Instance.AddProperty("$MPElement[Name='Windows!Microsoft.Windows.Computer']/PrincipalName$",$ComputerName)
+
+		$Discovery.AddInstance($Instance)
+
+		$RelationshipInstance = $Discovery.CreateRelationshipInstance("$MPElement[Name='ConfigHostsFolder']$")
+		$RelationshipInstance.Source = $configFileInstance
+		$RelationshipInstance.Target = $Instance 
+
+		$Discovery.AddInstance($RelationshipInstance)   
+
+	}
+
+	$reader.Close()
+
+	$Discovery
+
+} 
+catch
+{
+	$e = $_.Exception
+	$line = $_.InvocationInfo.ScriptLineNumber
+	$msg = $e.Message 
+
+
+
+    $oAPI.LogScriptEvent("Discover_Lala_folder.ps1", 19999, 1, "$msg at $line.....folder = $folder,FileName = $FileName")
+		
+}]]></ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>sourceID</Name>
+              <Value>$MPElement$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>managedEntityID</Name>
+              <Value>$Target/Id$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>ComputerName</Name>
+              <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>FullName</Name>
+              <Value>$Target/Property[Type="Test.Lala.ConfigFile.Class"]/FullName$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>FileName</Name>
+              <Value>$Target/Property[Type="Test.Lala.ConfigFile.Class"]/FileName$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+          <StrictErrorHandling>false</StrictErrorHandling>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="Lala.Log.Monitor" Accessibility="Internal" Enabled="true" Target="Test.Lala.Folder.Class" ParentMonitorID="Health!System.Health.ConfigurationState" Remotable="false" Priority="Normal" TypeID="CheckFolderDate.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Lala.Log.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name='FOLDERPATH']$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name='INTERVAL']$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name='SCHEDULE']$</AlertParameter3>
+            <AlertParameter4>$Data/Context/Property[@Name='ALERT']$</AlertParameter4>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+          <OperationalState ID="Critical" MonitorTypeStateID="Critical" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>60</IntervalSeconds>
+          <SyncTime />
+          <Parameters>
+            <Parameter>
+              <Name>Interval</Name>
+              <Value>$Target/Host/Property[Type="Test.Lala.ConfigFile.Class"]/Interval$</Value>
+            </Parameter>
+            <Parameter>
+              <Name>FullName</Name>
+              <Value>$Target/Host/Property[Type="Test.Lala.ConfigFile.Class"]/FullName$</Value>
+            </Parameter>
+          </Parameters>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="Test.Lala.ConfigFile.Class.View" Accessibility="Public" Enabled="true" Target="Test.Lala.ConfigFile.Class" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <InMaintenanceMode>false</InMaintenanceMode>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>Test.Lala.ConfigFile.Class-*-4d68fd6d-a65c-b7d5-a383-4defa600616c-*-Health</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>FullName</Name>
+            <Id>Test.Lala.ConfigFile.Class/FullName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>FileName</Name>
+            <Id>Test.Lala.ConfigFile.Class/FileName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>LastWriteTime</Name>
+            <Id>Test.Lala.ConfigFile.Class/LastWriteTime</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Interval</Name>
+            <Id>Test.Lala.ConfigFile.Class/Interval</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="9" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Test Lala Folder Class</Name>
+            <Id>Test.Lala.Folder.Class</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+      </View>
+      <View ID="Test.Lala.Folder.Class.View" Accessibility="Public" Enabled="true" Target="Test.Lala.Folder.Class" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <InMaintenanceMode>false</InMaintenanceMode>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>Test.Lala.Folder.Class-*-e5232322-0c0c-0d0f-0dd6-4811b830ba51-*-Health</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Display Name</Name>
+            <Id>System.Entity/DisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>FolderPath</Name>
+            <Id>Test.Lala.Folder.Class/FolderPath</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="Lala.Folders.Monitoring.Folder" Accessibility="Public" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ElementID="Test.Lala.ConfigFile.Class.View" ID="i95b2ac270f4f4f19bec10b15bb1f5811" Folder="Lala.Folders.Monitoring.Folder" />
+      <FolderItem ElementID="Test.Lala.Folder.Class.View" ID="i963104f0516c436d832b08c67ed4ebb0" Folder="Lala.Folders.Monitoring.Folder" />
+    </FolderItems>
+    <StringResources>
+      <StringResource ID="Lala.Log.Monitor.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="ConfigDiscovery">
+          <Name>Config Discovery</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
+        <DisplayString ElementID="FolderDiscovery">
+          <Name>Folder Discovery</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Lala.Log.Monitor">
+          <Name>Lala Log Monitor</Name>
+          <Description>Finds old log files in folders</Description>
+        </DisplayString>
+        <DisplayString ElementID="Lala.Log.Monitor.AlertMessage">
+          <Name>Old files alert</Name>
+          <Description>Found old files in {0} older then {1} min.
+
+Schedule = {2}
+
+List:
+
+{3}
+</Description>
+        </DisplayString>
+        <DisplayString ElementID="Lala.Log.Monitor" SubElementID="Healthy">
+          <Name>Healthy</Name>
+          <Description>Healthy</Description>
+        </DisplayString>
+        <DisplayString ElementID="Lala.Log.Monitor" SubElementID="Critical">
+          <Name>Critical</Name>
+          <Description>Critical</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.Folders.Monitoring">
+          <Name>Test Lala Folders monitoring</Name>
+          <Description>Test Lala Folders Monitoring (VSAE)
+
+            11
+          </Description>
+        </DisplayString>
+        <DisplayString ElementID="Lala.Folders.Monitoring.Folder">
+          <Name>Lala Folders Monitoring</Name>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.ConfigFile.Class.View">
+          <Name>Lala Monitoring config files</Name>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.Folder.Class.View">
+          <Name>Lala Folders</Name>
+          <Description />
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.Folder.Class">
+          <Name>Test Lala Folder Class</Name>
+          <Description>Test Lala Folder Class</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.Folder.Class" SubElementID="FolderPath">
+          <Name>FolderPath</Name>
+          <Description>FolderPath</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.ConfigFile.Class">
+          <Name>Test Lala Config File Class</Name>
+          <Description>Test Lala Config File Class</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.ConfigFile.Class" SubElementID="FullName">
+          <Name>FullName</Name>
+          <Description>FullName</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.ConfigFile.Class" SubElementID="FileName">
+          <Name>FileName</Name>
+          <Description>FileName</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.ConfigFile.Class" SubElementID="LastWriteTime">
+          <Name>LastWriteTime</Name>
+          <Description>LastWriteTime</Description>
+        </DisplayString>
+        <DisplayString ElementID="Test.Lala.ConfigFile.Class" SubElementID="Interval">
+          <Name>Interval</Name>
+          <Description>Interval (used by monitoring scripts)</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>
