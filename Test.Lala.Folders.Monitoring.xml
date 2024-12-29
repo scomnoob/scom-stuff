@@ -5,7 +5,7 @@
       <ID>Test.Lala.Folders.Monitoring</ID>
       <Version>1.0.0.304</Version>
     </Identity>
-    <Name>Test Lala Folders Monitoring</Name>
+    <Name>Test Lala Folders Monitoring</Name> 
     <References>
       <Reference Alias="SC">
         <ID>Microsoft.SystemCenter.Library</ID>
@@ -37,6 +37,13 @@
           <Property ID="FileName" Key="true" Type="string" Required="true" />
           <Property ID="LastWriteTime" Key="false" Type="string" Required="true" />
           <Property ID="Interval" Key="false" Type="int" Required="true" />
+
+         <!--sample line in file
+         
+         c:\test#Mon 19:30-Mon 23:00;sat 11:30-sat 12:00
+         
+         $folder,$schedule-->
+
         </ClassType>
         <ClassType ID="Test.Lala.Folder.Class" Accessibility="Internal" Abstract="false" Base="Windows!Microsoft.Windows.ApplicationComponent" Hosted="true" Singleton="false" Extension="false">
           <Property ID="FolderPath" Key="true" Type="string" Required="true" />
@@ -182,11 +189,11 @@ try
 {
 	$reader = [System.IO.File]::OpenText("$FullName")
 
-	while($null -ne ($line = $reader.ReadLine()))  ## $line это каждая строка конфига
+	while($null -ne ($line = $reader.ReadLine()))  ## 
 	{
 		$folder,$schedule = $line.split('#')
 
-		###############  проверяем расписание
+		###############  
 
 		$OnSchedule           = $false 
 		$DaysOfWeeks          = $Schedule.Split(";") 
@@ -275,7 +282,7 @@ try
         else
         {
 
-	       # $oAPI.LogScriptEvent("CheckFolderDate.ps1", 19999, 1, "out of sch")
+	       # $oAPI.LogScriptEvent("CheckFolderDate.ps1", 19999, 1, "out of schedule")
            
         }
 
@@ -330,7 +337,7 @@ catch
                 </And>
               </Expression>
             </ConditionDetection>
-            <ConditionDetection ID="CriticalFilter" TypeID="System!System.ExpressionFilter" Comment="supression включен!!!">
+            <ConditionDetection ID="CriticalFilter" TypeID="System!System.ExpressionFilter" Comment="">
               <Expression>
                 <And>
                   <Expression>
@@ -499,15 +506,14 @@ $Discovery = $oAPI.CreateDiscoveryData(0, $sourceID, $managedEntityID)
 
 try 
 {
-	#$folders = Get-Content -Path $FullName # т.к. файлы маленькие можно юзать gc
+	#$folders = Get-Content -Path $FullName # 
 
 	$reader = [System.IO.File]::OpenText($FullName)
 
-	while($null -ne ($line = $reader.ReadLine()))  ## $line это каждая строка
-
+	while($null -ne ($line = $reader.ReadLine()))  ## 
 	{
         
-        $folder = $line.split('#')[0]  
+  $folder = $line.split('#')[0]  
 
 		$oAPI.LogScriptEvent("Discover_Lala_folder.ps1.ps1", 666, 1, "folder = $folder")
    
